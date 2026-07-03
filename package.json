@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "package": "npm run build && cd dist && zip -r ../copy-as-markdown.zip .",
+    "notices": "node scripts/generate-notices.mjs",
+    "package": "npm run notices && npm run build && cd dist && zip -r ../copy-as-markdown.zip .",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

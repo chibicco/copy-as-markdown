@@ -40,9 +40,10 @@ sources, not build output):
 npm run package
 ```
 
-This builds and zips `dist/` into `copy-as-markdown.zip` with `manifest.json`
-at the archive root, as the Chrome Web Store requires. Upload the zip to the
-developer dashboard.
+This regenerates `public/THIRD_PARTY_NOTICES.md` (license texts of the
+bundled packages, required for redistribution), builds, and zips `dist/`
+into `copy-as-markdown.zip` with `manifest.json` at the archive root, as
+the Chrome Web Store requires. Upload the zip to the developer dashboard.
 
 ## How it works
 

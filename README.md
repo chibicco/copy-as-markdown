@@ -30,6 +30,20 @@ Load the extension in Chrome:
 2. Enable **Developer mode**
 3. Click **Load unpacked** and select the `dist/` directory
 
+## Packaging
+
+The distributable extension is the contents of `dist/`, so the package is
+built from there (`git archive` is not suitable here — it archives tracked
+sources, not build output):
+
+```sh
+npm run package
+```
+
+This builds and zips `dist/` into `copy-as-markdown.zip` with `manifest.json`
+at the archive root, as the Chrome Web Store requires. Upload the zip to the
+developer dashboard.
+
 ## How it works
 
 - `src/background.ts` — service worker. On toolbar click it injects the

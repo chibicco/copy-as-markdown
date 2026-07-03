@@ -1,0 +1,22 @@
+{
+  "name": "copy-as-markdown",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "defuddle": "^0.19.1",
+    "dompurify": "^3.4.11",
+    "marked": "^18.0.5"
+  },
+  "devDependencies": {
+    "@crxjs/vite-plugin": "^2.7.1",
+    "@types/chrome": "^0.2.2",
+    "typescript": "^6.0.3",
+    "vite": "^8.1.3"
+  }
+}

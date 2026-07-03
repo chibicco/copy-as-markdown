@@ -4,6 +4,16 @@ A Chrome extension that converts the current page to Markdown. Click the
 toolbar icon and the page's main content is extracted, converted, and opened
 in a viewer tab where you can preview, edit, copy, or save it as a `.md` file.
 
+## Screenshots
+
+Rendered preview of the captured page:
+
+![Viewer tab showing the rendered markdown preview](docs/screenshot-preview.png)
+
+The same capture as editable Markdown source:
+
+![Viewer tab showing the editable markdown source](docs/screenshot-markdown.png)
+
 ## Features
 
 - Article extraction and Markdown conversion powered by

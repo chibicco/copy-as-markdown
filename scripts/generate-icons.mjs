@@ -1,6 +1,7 @@
-// Generates the extension icons (a white "M↓" mark on an indigo rounded
-// square) as PNGs using only Node built-ins, so the output is reproducible
-// without image dependencies. Run: node scripts/generate-icons.mjs
+// Generates the extension icons (a white clipboard with lowercase "md"
+// overlapping it; where they overlap the fill is knocked out to the
+// background color) as PNGs using only Node built-ins, so the output is
+// reproducible without image dependencies. Run: node scripts/generate-icons.mjs
 import { deflateSync } from 'node:zlib'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
@@ -10,40 +11,58 @@ const OUT_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'public', 'i
 const SIZES = [16, 48, 128]
 const SUPERSAMPLE = 4
 const CORNER_RADIUS = 0.19
-const BG = [0x4f, 0x46, 0xe5, 0xff]
+const BG = [0x18, 0x18, 0x1b, 0xff]
 const FG = [0xff, 0xff, 0xff, 0xff]
 
-// Glyph shapes in normalized [0,1] coordinates.
-const M_POLY = [
-  [0.14, 0.71], [0.14, 0.29], [0.26, 0.29], [0.37, 0.43], [0.48, 0.29],
-  [0.6, 0.29], [0.6, 0.71], [0.48, 0.71], [0.48, 0.47], [0.37, 0.6],
-  [0.26, 0.47], [0.26, 0.71],
-]
-const ARROW_SHAFT = [
-  [0.765, 0.29], [0.845, 0.29], [0.845, 0.5], [0.765, 0.5],
-]
-const ARROW_HEAD = [
-  [0.66, 0.5], [0.94, 0.5], [0.805, 0.71],
-]
-const GLYPHS = [M_POLY, ARROW_SHAFT, ARROW_HEAD]
+// Shapes in normalized [0,1] coordinates. The letter stroke width:
+const W = 0.07
 
-function pointInPolygon(x, y, poly) {
-  let inside = false
-  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-    const [xi, yi] = poly[i]
-    const [xj, yj] = poly[j]
-    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) {
-      inside = !inside
-    }
-  }
-  return inside
+function inRect(x, y, x0, y0, x1, y1) {
+  return x >= x0 && x <= x1 && y >= y0 && y <= y1
+}
+
+function inRRect(x, y, x0, y0, x1, y1, r) {
+  if (!inRect(x, y, x0, y0, x1, y1)) return false
+  const dx = Math.max(x0 + r - x, x - (x1 - r), 0)
+  const dy = Math.max(y0 + r - y, y - (y1 - r), 0)
+  return dx * dx + dy * dy <= r * r
 }
 
 function inRoundedSquare(x, y) {
-  const r = CORNER_RADIUS
-  const dx = Math.max(r - x, x - (1 - r), 0)
-  const dy = Math.max(r - y, y - (1 - r), 0)
-  return dx * dx + dy * dy <= r * r
+  return inRRect(x, y, 0, 0, 1, 1, CORNER_RADIUS)
+}
+
+// Clipboard drawn as an outline: board ring + solid clip tab at the top.
+const S = 0.06 // outline stroke width
+
+function inClipboard(x, y) {
+  const board =
+    inRRect(x, y, 0.14, 0.12, 0.86, 0.9, 0.09) &&
+    !inRRect(x, y, 0.14 + S, 0.12 + S, 0.86 - S, 0.9 - S, 0.05)
+  // Clip: wide tab over the board's top edge, with a slot hole like the
+  // metal clip's handle.
+  const tab =
+    inRRect(x, y, 0.32, 0.04, 0.68, 0.24, 0.06) &&
+    !inRRect(x, y, 0.4, 0.085, 0.6, 0.15, 0.03)
+  return board || tab
+}
+
+// Lowercase geometric "md" centered on the board, scaled down a touch to
+// leave breathing room inside the outline.
+function inLetters(x, y) {
+  const k = 0.85
+  x = 0.5 + (x - 0.5) / k
+  y = 0.57 + (y - 0.57) / k
+  const m =
+    inRect(x, y, 0.22, 0.42, 0.52, 0.42 + W) ||
+    inRect(x, y, 0.22, 0.42, 0.22 + W, 0.72) ||
+    inRect(x, y, 0.37 - W / 2, 0.42, 0.37 + W / 2, 0.72) ||
+    inRect(x, y, 0.52 - W, 0.42, 0.52, 0.72)
+  const d =
+    inRect(x, y, 0.78 - W, 0.26, 0.78, 0.72) ||
+    (inRect(x, y, 0.57, 0.42, 0.78, 0.72) &&
+      !inRect(x, y, 0.57 + W, 0.42 + W, 0.78 - W, 0.72 - W))
+  return m || d
 }
 
 function samplePixel(px, py, size, pad) {
@@ -53,7 +72,8 @@ function samplePixel(px, py, size, pad) {
       const x = ((px + (sx + 0.5) / SUPERSAMPLE) / size - pad) / (1 - 2 * pad)
       const y = ((py + (sy + 0.5) / SUPERSAMPLE) / size - pad) / (1 - 2 * pad)
       if (!inRoundedSquare(x, y)) continue
-      const color = GLYPHS.some((poly) => pointInPolygon(x, y, poly)) ? FG : BG
+      // XOR: overlap between clipboard and letters knocks out to background.
+      const color = inClipboard(x, y) !== inLetters(x, y) ? FG : BG
       for (let c = 0; c < 4; c++) acc[c] += color[c]
     }
   }

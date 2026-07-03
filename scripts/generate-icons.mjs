@@ -46,12 +46,12 @@ function inRoundedSquare(x, y) {
   return dx * dx + dy * dy <= r * r
 }
 
-function samplePixel(px, py, size) {
+function samplePixel(px, py, size, pad) {
   const acc = [0, 0, 0, 0]
   for (let sy = 0; sy < SUPERSAMPLE; sy++) {
     for (let sx = 0; sx < SUPERSAMPLE; sx++) {
-      const x = (px + (sx + 0.5) / SUPERSAMPLE) / size
-      const y = (py + (sy + 0.5) / SUPERSAMPLE) / size
+      const x = ((px + (sx + 0.5) / SUPERSAMPLE) / size - pad) / (1 - 2 * pad)
+      const y = ((py + (sy + 0.5) / SUPERSAMPLE) / size - pad) / (1 - 2 * pad)
       if (!inRoundedSquare(x, y)) continue
       const color = GLYPHS.some((poly) => pointInPolygon(x, y, poly)) ? FG : BG
       for (let c = 0; c < 4; c++) acc[c] += color[c]
@@ -60,13 +60,13 @@ function samplePixel(px, py, size) {
   return acc.map((v) => Math.round(v / (SUPERSAMPLE * SUPERSAMPLE)))
 }
 
-function renderRGBA(size) {
+function renderRGBA(size, pad = 0) {
   const rows = Buffer.alloc(size * (1 + size * 4))
   for (let y = 0; y < size; y++) {
     const rowStart = y * (1 + size * 4)
     rows[rowStart] = 0 // PNG filter: none
     for (let x = 0; x < size; x++) {
-      const [r, g, b, a] = samplePixel(x, y, size)
+      const [r, g, b, a] = samplePixel(x, y, size, pad)
       rows.set([r, g, b, a], rowStart + 1 + x * 4)
     }
   }
@@ -114,3 +114,10 @@ for (const size of SIZES) {
   writeFileSync(file, encodePNG(size, renderRGBA(size)))
   console.log(`wrote ${file}`)
 }
+
+// Chrome Web Store listing icon: 96x96 artwork centered in a 128x128
+// canvas with a 16px transparent border, per the store image guidelines.
+// Not shipped in the extension package, hence docs/ instead of public/.
+const storeFile = join(OUT_DIR, '..', '..', 'docs', 'store-icon-128.png')
+writeFileSync(storeFile, encodePNG(128, renderRGBA(128, 16 / 128)))
+console.log(`wrote ${storeFile}`)

@@ -5,7 +5,7 @@ import { defineManifest } from '@crxjs/vite-plugin'
 export default defineManifest({
   manifest_version: 3,
   name: 'Copy as Markdown',
-  version: '0.1.0',
+  version: '0.1.1',
   description: 'Convert the current page to Markdown and view, copy, or download it.',
   homepage_url: 'https://github.com/chibicco/copy-as-markdown',
   minimum_chrome_version: '102',
